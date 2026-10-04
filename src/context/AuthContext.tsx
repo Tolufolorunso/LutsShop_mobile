@@ -8,6 +8,7 @@ import {
   AuthContextType,
   AuthSyncStatus,
   BackendProfileResponse,
+  DEMO_USER,
 } from '@/types/auth';
 
 // Complete any pending auth sessions on web or deep linking redirects
@@ -186,6 +187,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [promptAsync, request, fetchGoogleProfile]);
 
+  // One-tap Demo Mode for evaluator testing matching desktop web demo account
+  const signInAsDemo = useCallback(async () => {
+    setError(null);
+    setIsLoading(true);
+    try {
+      // 1. Immediately activate demo user locally
+      setUser(DEMO_USER);
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(DEMO_USER));
+
+      // 2. Synchronize demo profile with backend (POST /api/auth/google)
+      const syncedUser = await syncUserProfileWithBackend(DEMO_USER);
+
+      // 3. Update local storage with any enriched profile details from backend
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(syncedUser));
+      setUser(syncedUser);
+    } catch (err) {
+      console.warn('Demo sign-in sync warning (using cached demo profile):', err);
+      // Ensure DEMO_USER remains active locally even if offline
+      setUser(DEMO_USER);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [syncUserProfileWithBackend]);
+
   const signOut = useCallback(async () => {
     setUser(null);
     setError(null);
@@ -205,6 +230,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         error,
         syncStatus,
         signInWithGoogle,
+        signInAsDemo,
         signOut,
       }}
     >

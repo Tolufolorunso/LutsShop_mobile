@@ -14,7 +14,15 @@ import { API_BASE_URL } from '@/config/api';
 import { CinemaTheme } from '@/theme';
 
 export default function AccountScreen() {
-  const { user, isLoading, error, syncStatus, signInWithGoogle, signOut } = useAuth();
+  const {
+    user,
+    isLoading,
+    error,
+    syncStatus,
+    signInWithGoogle,
+    signInAsDemo,
+    signOut,
+  } = useAuth();
 
   const getSyncStatusText = () => {
     switch (syncStatus) {
@@ -40,6 +48,18 @@ export default function AccountScreen() {
       default:
         return CinemaTheme.colors.textTertiary;
     }
+  };
+
+  const getTierLabel = () => {
+    if (!user) return 'GUEST TIER';
+    if (user.isDemo) return 'DEMO EVALUATOR';
+    if (user.isPro) return 'PRO SUITE';
+    return 'GOOGLE VERIFIED';
+  };
+
+  const getTierVariant = (): 'gold' | 'camera' => {
+    if (user?.isDemo || user?.isPro) return 'gold';
+    return 'camera';
   };
 
   return (
@@ -80,14 +100,8 @@ export default function AccountScreen() {
                 {user ? user.email : 'guest@lutshop.cinema'}
               </AppText>
               <BadgePill
-                label={
-                  user
-                    ? user.isPro
-                      ? 'PRO SUITE'
-                      : 'GOOGLE VERIFIED'
-                    : 'GUEST TIER'
-                }
-                variant={user ? 'gold' : 'camera'}
+                label={getTierLabel()}
+                variant={getTierVariant()}
                 size="sm"
                 style={styles.tierBadge}
               />
@@ -106,12 +120,17 @@ export default function AccountScreen() {
               <>
                 <View style={styles.authSuccessHeader}>
                   <Ionicons
-                    name="checkmark-circle"
+                    name={user.isDemo ? 'videocam' : 'checkmark-circle'}
                     size={20}
-                    color={CinemaTheme.colors.success}
+                    color={user.isDemo ? CinemaTheme.colors.accentGold : CinemaTheme.colors.success}
                   />
-                  <AppText variant="bodyBold" color={CinemaTheme.colors.success}>
-                    Authenticated via Google Identity
+                  <AppText
+                    variant="bodyBold"
+                    color={user.isDemo ? CinemaTheme.colors.accentGold : CinemaTheme.colors.success}
+                  >
+                    {user.isDemo
+                      ? 'Authenticated via Demo Account (Alex Turner)'
+                      : 'Authenticated via Google Identity'}
                   </AppText>
                 </View>
 
@@ -120,12 +139,14 @@ export default function AccountScreen() {
                   color={CinemaTheme.colors.textSecondary}
                   style={styles.authText}
                 >
-                  Your Google identity is active. Orders and cloud cart synchronization are tied to this profile.
+                  {user.isDemo
+                    ? 'Demo mode active for evaluator testing. This profile shares demo-filmmaker-001 with the desktop web demo user for live cross-platform evaluation.'
+                    : 'Your Google identity is active. Orders and cloud cart synchronization are tied to this profile.'}
                 </AppText>
 
                 <View style={styles.subInfoBox}>
                   <AppText variant="caption" color={CinemaTheme.colors.textTertiary}>
-                    GOOGLE SUB IDENTIFIER
+                    {user.isDemo ? 'DEMO EVALUATOR IDENTIFIER' : 'GOOGLE SUB IDENTIFIER'}
                   </AppText>
                   <AppText variant="bodyBold" color={CinemaTheme.colors.primary} numberOfLines={1}>
                     {user.id}
@@ -160,7 +181,7 @@ export default function AccountScreen() {
                   <View style={styles.loadingBox}>
                     <ActivityIndicator size="small" color={CinemaTheme.colors.primary} />
                     <AppText variant="caption" color={CinemaTheme.colors.primary}>
-                      Connecting to Google Identity Services...
+                      Connecting to Identity Services...
                     </AppText>
                   </View>
                 ) : (
@@ -176,7 +197,7 @@ export default function AccountScreen() {
                     <AppButton
                       title="SIGN IN AS DEMO (ALEX TURNER)"
                       variant="outline"
-                      onPress={() => {}}
+                      onPress={signInAsDemo}
                       icon={<Ionicons name="videocam" size={16} color={CinemaTheme.colors.primary} />}
                     />
                   </>
@@ -202,8 +223,11 @@ export default function AccountScreen() {
 
             <View style={styles.diagRow}>
               <AppText variant="body">Identity Service</AppText>
-              <AppText variant="caption" color={CinemaTheme.colors.accentGold}>
-                GOOGLE OAUTH (EXPO)
+              <AppText
+                variant="caption"
+                color={user?.isDemo ? CinemaTheme.colors.primary : CinemaTheme.colors.accentGold}
+              >
+                {user?.isDemo ? 'DEMO MODE (EVALUATOR)' : 'GOOGLE OAUTH (EXPO)'}
               </AppText>
             </View>
 
@@ -213,7 +237,7 @@ export default function AccountScreen() {
                 variant="caption"
                 color={user ? CinemaTheme.colors.success : CinemaTheme.colors.textTertiary}
               >
-                {user ? 'AUTHENTICATED' : 'GUEST'}
+                {user ? (user.isDemo ? 'DEMO ACTIVE' : 'AUTHENTICATED') : 'GUEST'}
               </AppText>
             </View>
 
