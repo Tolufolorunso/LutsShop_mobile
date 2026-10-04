@@ -17,18 +17,30 @@ WebBrowser.maybeCompleteAuthSession();
 const STORAGE_KEY = '@lutshop_mobile_user';
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Safe fallback string to satisfy expo-auth-session invariant checks when .env is unconfigured
+const DEFAULT_CLIENT_ID = 'unconfigured-client-id.apps.googleusercontent.com';
+const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || DEFAULT_CLIENT_ID;
+const googleAndroidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || googleWebClientId;
+const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || googleWebClientId;
+
+const isGoogleAuthConfigured = Boolean(
+  process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ||
+  process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ||
+  process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID
+);
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<AuthSyncStatus>('idle');
 
-  // Configure Google OAuth request with env-provided client IDs
+  // Configure Google OAuth request with env-provided client IDs or safe fallbacks
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    clientId: googleWebClientId,
+    webClientId: googleWebClientId,
+    iosClientId: googleIosClientId,
+    androidClientId: googleAndroidClientId,
     scopes: ['profile', 'email'],
   });
 
@@ -170,8 +182,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setError(null);
     setIsLoading(true);
     try {
+      if (!isGoogleAuthConfigured) {
+        setError(
+          'Google Sign-In requires Client ID setup in .env. Configure EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID or use Demo Mode.'
+        );
+        setIsLoading(false);
+        return;
+      }
       if (!request) {
-        setError('Google authentication is not ready or Client ID is unconfigured');
+        setError('Google authentication service is not ready. Please try again or use Demo Mode.');
         setIsLoading(false);
         return;
       }
