@@ -14,7 +14,9 @@ export default function RootLayout() {
             backgroundColor: CinemaTheme.colors.background,
           },
         }}
-      />
+      >
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
     </SafeAreaProvider>
   );
 }
