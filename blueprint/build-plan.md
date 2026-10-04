@@ -18,7 +18,7 @@ Sequential development roadmap. Each item is a reviewable slice of functionality
 ## Milestone 3: Google Authentication & Cross-Platform Identity
 
 - [x] 8. **Google OAuth & AuthContext** — `expo-auth-session` Google provider, extract `sub` via Google userinfo endpoint, `AuthContext` with loading state
-- [ ] 9. **Backend Profile Sync** — Wire sign-in to `POST /api/auth/google`, upsert `profiles`, persist user in AsyncStorage
+- [x] 9. **Backend Profile Sync** — Wire sign-in to `POST /api/auth/google`, upsert `profiles`, persist user in AsyncStorage
 - [ ] 10. **Demo Mode (Alex Turner) Fallback** — One-tap `demo-filmmaker-001` sign-in matching web demo user for evaluator access
 - [ ] 11. **Profile & Account Screen** — `ProfileScreen` with avatar, name, email, Pro badge, Google sign-in/out, and backend connectivity status
 

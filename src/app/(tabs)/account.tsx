@@ -10,10 +10,37 @@ import {
   CinemaHeader,
 } from '@/components/ui';
 import { useAuth } from '@/context';
+import { API_BASE_URL } from '@/config/api';
 import { CinemaTheme } from '@/theme';
 
 export default function AccountScreen() {
-  const { user, isLoading, error, signInWithGoogle, signOut } = useAuth();
+  const { user, isLoading, error, syncStatus, signInWithGoogle, signOut } = useAuth();
+
+  const getSyncStatusText = () => {
+    switch (syncStatus) {
+      case 'synced':
+        return 'SYNCED TO CLOUD';
+      case 'syncing':
+        return 'SYNCHRONIZING...';
+      case 'offline':
+        return 'OFFLINE (CACHED)';
+      default:
+        return user ? 'LOCAL SESSION' : 'IDLE';
+    }
+  };
+
+  const getSyncStatusColor = () => {
+    switch (syncStatus) {
+      case 'synced':
+        return CinemaTheme.colors.success;
+      case 'syncing':
+        return CinemaTheme.colors.primary;
+      case 'offline':
+        return CinemaTheme.colors.accentGold;
+      default:
+        return CinemaTheme.colors.textTertiary;
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -169,7 +196,7 @@ export default function AccountScreen() {
             <View style={styles.diagRow}>
               <AppText variant="body">Backend URL</AppText>
               <AppText variant="caption" color={CinemaTheme.colors.primary}>
-                LOCAL / CONFIGURED
+                {API_BASE_URL}
               </AppText>
             </View>
 
@@ -187,6 +214,23 @@ export default function AccountScreen() {
                 color={user ? CinemaTheme.colors.success : CinemaTheme.colors.textTertiary}
               >
                 {user ? 'AUTHENTICATED' : 'GUEST'}
+              </AppText>
+            </View>
+
+            <View style={styles.diagRow}>
+              <AppText variant="body">Backend Profile Sync</AppText>
+              <AppText variant="caption" color={getSyncStatusColor()}>
+                {getSyncStatusText()}
+              </AppText>
+            </View>
+
+            <View style={styles.diagRow}>
+              <AppText variant="body">Session Storage</AppText>
+              <AppText
+                variant="caption"
+                color={user ? CinemaTheme.colors.primary : CinemaTheme.colors.textTertiary}
+              >
+                {user ? '@lutshop_mobile_user' : 'NONE'}
               </AppText>
             </View>
 

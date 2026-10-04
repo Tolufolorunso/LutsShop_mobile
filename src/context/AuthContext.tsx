@@ -1,17 +1,26 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
-import { AuthUser, AuthContextType } from '@/types/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { apiClient } from '@/config/api';
+import {
+  AuthUser,
+  AuthContextType,
+  AuthSyncStatus,
+  BackendProfileResponse,
+} from '@/types/auth';
 
 // Complete any pending auth sessions on web or deep linking redirects
 WebBrowser.maybeCompleteAuthSession();
 
+const STORAGE_KEY = '@lutshop_mobile_user';
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [syncStatus, setSyncStatus] = useState<AuthSyncStatus>('idle');
 
   // Configure Google OAuth request with env-provided client IDs
   const [request, response, promptAsync] = Google.useAuthRequest({
@@ -22,39 +31,121 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     scopes: ['profile', 'email'],
   });
 
-  const fetchGoogleProfile = useCallback(async (accessToken: string) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+  // Sync profile with backend API (POST /api/auth/google) to upsert in Supabase
+  const syncUserProfileWithBackend = useCallback(
+    async (userData: AuthUser): Promise<AuthUser> => {
+      setSyncStatus('syncing');
+      try {
+        const result = await apiClient.post<BackendProfileResponse>(
+          '/api/auth/google',
+          {
+            id: userData.id,
+            email: userData.email,
+            fullName: userData.fullName,
+            avatarUrl: userData.avatarUrl,
+          },
+          { timeoutMs: 5000 }
+        );
+
+        let resolvedUser = { ...userData };
+        if (result?.profile) {
+          resolvedUser = {
+            ...resolvedUser,
+            isPro: Boolean(result.profile.is_pro),
+            fullName: result.profile.full_name || resolvedUser.fullName,
+            avatarUrl: result.profile.avatar_url || resolvedUser.avatarUrl,
+          };
+        }
+
+        setSyncStatus('synced');
+        return resolvedUser;
+      } catch (err) {
+        console.warn('Backend sync warning (offline or local server disconnected):', err);
+        setSyncStatus('offline');
+        return userData;
+      }
+    },
+    []
+  );
+
+  // Restore cached user session from AsyncStorage on startup
+  useEffect(() => {
+    let isMounted = true;
+
+    AsyncStorage.getItem(STORAGE_KEY)
+      .then((cached) => {
+        if (!isMounted) return;
+        if (cached) {
+          try {
+            const parsed: AuthUser = JSON.parse(cached);
+            setUser(parsed);
+            // Verify backend synchronization in background
+            syncUserProfileWithBackend(parsed)
+              .then((synced) => {
+                if (!isMounted) return;
+                setUser(synced);
+              })
+              .catch(() => {});
+          } catch {
+            // Ignore corrupted cached JSON
+          }
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to load user session from storage', err);
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       });
 
-      if (!res.ok) {
-        throw new Error(`Google profile fetch failed with status ${res.status}`);
+    return () => {
+      isMounted = false;
+    };
+  }, [syncUserProfileWithBackend]);
+
+  const fetchGoogleProfile = useCallback(
+    async (accessToken: string) => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error(`Google profile fetch failed with status ${res.status}`);
+        }
+
+        const googleData = await res.json();
+
+        const baseAuthUser: AuthUser = {
+          id: googleData.sub,
+          email: googleData.email,
+          fullName: googleData.name || 'Filmmaker',
+          avatarUrl: googleData.picture,
+          isDemo: false,
+          isPro: false,
+        };
+
+        // Sync with backend database
+        const syncedUser = await syncUserProfileWithBackend(baseAuthUser);
+
+        // Persist session to AsyncStorage
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(syncedUser));
+        setUser(syncedUser);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to retrieve Google profile';
+        setError(message);
+      } finally {
+        setIsLoading(false);
       }
-
-      const googleData = await res.json();
-
-      const authUser: AuthUser = {
-        id: googleData.sub,
-        email: googleData.email,
-        fullName: googleData.name || 'Filmmaker',
-        avatarUrl: googleData.picture,
-        isDemo: false,
-        isPro: false,
-      };
-
-      setUser(authUser);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to retrieve Google profile';
-      setError(message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [syncUserProfileWithBackend]
+  );
 
   // Handle Google OAuth redirect response via async microtask
   useEffect(() => {
@@ -98,6 +189,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = useCallback(async () => {
     setUser(null);
     setError(null);
+    setSyncStatus('idle');
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEY);
+    } catch (err) {
+      console.warn('Error clearing stored session:', err);
+    }
   }, []);
 
   return (
@@ -106,6 +203,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         isLoading,
         error,
+        syncStatus,
         signInWithGoogle,
         signOut,
       }}
