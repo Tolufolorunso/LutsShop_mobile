@@ -1,5 +1,11 @@
-import React from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -10,8 +16,11 @@ import {
   CinemaHeader,
 } from '@/components/ui';
 import { useAuth } from '@/context';
+import { useBackendDiagnostics } from '@/hooks';
 import { API_BASE_URL } from '@/config/api';
 import { CinemaTheme } from '@/theme';
+
+const CAMERA_PROFILES = ['Sony S-Log3', 'ARRI LogC', 'BMD Film', 'RED IPP2'];
 
 export default function AccountScreen() {
   const {
@@ -21,8 +30,18 @@ export default function AccountScreen() {
     syncStatus,
     signInWithGoogle,
     signInAsDemo,
+    toggleProTier,
     signOut,
   } = useAuth();
+
+  const {
+    latencyMs,
+    status: diagStatus,
+    lastChecked,
+    checkConnection,
+  } = useBackendDiagnostics();
+
+  const [selectedCamera, setSelectedCamera] = useState<string>('Sony S-Log3');
 
   const getSyncStatusText = () => {
     switch (syncStatus) {
@@ -50,15 +69,22 @@ export default function AccountScreen() {
     }
   };
 
+  const getLatencyColor = () => {
+    if (diagStatus === 'offline' || latencyMs === null) return CinemaTheme.colors.error;
+    if (latencyMs < 400) return CinemaTheme.colors.success;
+    if (latencyMs < 900) return CinemaTheme.colors.accentGold;
+    return CinemaTheme.colors.error;
+  };
+
   const getTierLabel = () => {
     if (!user) return 'GUEST TIER';
-    if (user.isDemo) return 'DEMO EVALUATOR';
-    if (user.isPro) return 'PRO SUITE';
-    return 'GOOGLE VERIFIED';
+    if (user.isDemo) return user.isPro ? 'DEMO EVALUATOR (PRO)' : 'DEMO EVALUATOR';
+    if (user.isPro) return 'PRO CREATOR';
+    return 'STANDARD CREATOR';
   };
 
   const getTierVariant = (): 'gold' | 'camera' => {
-    if (user?.isDemo || user?.isPro) return 'gold';
+    if (user?.isPro || user?.isDemo) return 'gold';
     return 'camera';
   };
 
@@ -99,15 +125,104 @@ export default function AccountScreen() {
               <AppText variant="caption" color={CinemaTheme.colors.textSecondary}>
                 {user ? user.email : 'guest@lutshop.cinema'}
               </AppText>
-              <BadgePill
-                label={getTierLabel()}
-                variant={getTierVariant()}
-                size="sm"
-                style={styles.tierBadge}
-              />
+              <View style={styles.badgeRow}>
+                <BadgePill
+                  label={getTierLabel()}
+                  variant={getTierVariant()}
+                  size="sm"
+                />
+                {user && (
+                  <BadgePill
+                    label={syncStatus === 'synced' ? 'CLOUD LINKED' : 'LOCAL CACHE'}
+                    variant={syncStatus === 'synced' ? 'primary' : 'camera'}
+                    size="sm"
+                  />
+                )}
+              </View>
             </View>
           </View>
         </CinemaCard>
+
+        {/* Subscription Tier Pass Card */}
+        <View style={styles.section}>
+          <AppText variant="badge" color={CinemaTheme.colors.primary} style={styles.sectionLabel}>
+            CREATOR SUBSCRIPTION STATUS
+          </AppText>
+
+          <CinemaCard style={styles.subscriptionCard}>
+            <View style={styles.tierHeader}>
+              <Ionicons
+                name={user?.isPro ? 'sparkles' : 'videocam'}
+                size={22}
+                color={user?.isPro ? CinemaTheme.colors.accentGold : CinemaTheme.colors.primary}
+              />
+              <AppText
+                variant="bodyBold"
+                color={user?.isPro ? CinemaTheme.colors.accentGold : CinemaTheme.colors.textPrimary}
+              >
+                {user?.isPro
+                  ? 'PRO CREATOR PASS (ACTIVE)'
+                  : user?.isDemo
+                    ? 'EVALUATOR DEMO PASS'
+                    : user
+                      ? 'STANDARD CREATOR TIER'
+                      : 'GUEST EXPLORER TIER'}
+              </AppText>
+            </View>
+
+            <AppText variant="caption" color={CinemaTheme.colors.textSecondary} style={styles.tierDesc}>
+              {user?.isPro
+                ? 'Full professional production access unlocked. Enjoy unrestricted 3D LUT downloads, camera log matrices, and priority cloud synchronization.'
+                : 'Browse cinema LUTs, test touch split-screen comparisons, and explore log profiles. Upgrade to Pro for unlimited pack downloads.'}
+            </AppText>
+
+            <View style={styles.featuresList}>
+              <View style={styles.featureItem}>
+                <Ionicons
+                  name="checkmark-circle"
+                  size={16}
+                  color={CinemaTheme.colors.success}
+                />
+                <AppText variant="caption" color={CinemaTheme.colors.textSecondary}>
+                  Interactive 60fps Split Comparison Engine
+                </AppText>
+              </View>
+              <View style={styles.featureItem}>
+                <Ionicons
+                  name="checkmark-circle"
+                  size={16}
+                  color={CinemaTheme.colors.success}
+                />
+                <AppText variant="caption" color={CinemaTheme.colors.textSecondary}>
+                  Cross-Platform Unified Cart Sync
+                </AppText>
+              </View>
+              <View style={styles.featureItem}>
+                <Ionicons
+                  name={user?.isPro ? 'checkmark-circle' : 'lock-closed'}
+                  size={16}
+                  color={user?.isPro ? CinemaTheme.colors.accentGold : CinemaTheme.colors.textTertiary}
+                />
+                <AppText
+                  variant="caption"
+                  color={user?.isPro ? CinemaTheme.colors.textPrimary : CinemaTheme.colors.textTertiary}
+                >
+                  Commercial Production & Broadcast License
+                </AppText>
+              </View>
+            </View>
+
+            {user && (
+              <AppButton
+                title={user.isPro ? 'SWITCH TO STANDARD TIER (TEST)' : 'UPGRADE TO PRO CREATOR PASS (TEST)'}
+                variant="outline"
+                onPress={toggleProTier}
+                icon={<Ionicons name="swap-horizontal" size={16} color={CinemaTheme.colors.primary} />}
+                style={styles.tierToggleBtn}
+              />
+            )}
+          </CinemaCard>
+        </View>
 
         {/* Authentication Card */}
         <View style={styles.section}>
@@ -207,16 +322,16 @@ export default function AccountScreen() {
           </CinemaCard>
         </View>
 
-        {/* System Diagnostics */}
+        {/* System Diagnostics & Connectivity Testing */}
         <View style={styles.section}>
           <AppText variant="badge" color={CinemaTheme.colors.primary} style={styles.sectionLabel}>
-            SYSTEM DIAGNOSTICS
+            SYSTEM DIAGNOSTICS & CONNECTIVITY
           </AppText>
 
           <CinemaCard style={styles.diagCard}>
             <View style={styles.diagRow}>
               <AppText variant="body">Backend URL</AppText>
-              <AppText variant="caption" color={CinemaTheme.colors.primary}>
+              <AppText variant="caption" color={CinemaTheme.colors.primary} numberOfLines={1}>
                 {API_BASE_URL}
               </AppText>
             </View>
@@ -227,7 +342,7 @@ export default function AccountScreen() {
                 variant="caption"
                 color={user?.isDemo ? CinemaTheme.colors.primary : CinemaTheme.colors.accentGold}
               >
-                {user?.isDemo ? 'DEMO MODE (EVALUATOR)' : 'GOOGLE OAUTH (EXPO)'}
+                {user?.isDemo ? 'DEMO MODE (EVALUATOR)' : 'GOOGLE OAUTH 2.0'}
               </AppText>
             </View>
 
@@ -242,9 +357,27 @@ export default function AccountScreen() {
             </View>
 
             <View style={styles.diagRow}>
-              <AppText variant="body">Backend Profile Sync</AppText>
+              <AppText variant="body">Cloud Profile Sync</AppText>
               <AppText variant="caption" color={getSyncStatusColor()}>
                 {getSyncStatusText()}
+              </AppText>
+            </View>
+
+            <View style={styles.diagRow}>
+              <AppText variant="body">Ping Latency</AppText>
+              <AppText variant="caption" color={getLatencyColor()}>
+                {diagStatus === 'checking'
+                  ? 'MEASURING...'
+                  : latencyMs !== null
+                    ? `${latencyMs}ms (${diagStatus.toUpperCase()})`
+                    : 'OFFLINE / UNREACHABLE'}
+              </AppText>
+            </View>
+
+            <View style={styles.diagRow}>
+              <AppText variant="body">Last Health Check</AppText>
+              <AppText variant="caption" color={CinemaTheme.colors.textSecondary}>
+                {lastChecked || 'Pending check'}
               </AppText>
             </View>
 
@@ -262,6 +395,69 @@ export default function AccountScreen() {
               <AppText variant="body">Cart Engine</AppText>
               <AppText variant="caption" color={CinemaTheme.colors.success}>
                 POSTGRES + REALTIME
+              </AppText>
+            </View>
+
+            <AppButton
+              title={diagStatus === 'checking' ? 'MEASURING LATENCY...' : 'TEST PING / REFRESH STATUS'}
+              variant="outline"
+              size="sm"
+              onPress={checkConnection}
+              icon={<Ionicons name="refresh" size={14} color={CinemaTheme.colors.primary} />}
+              style={styles.pingBtn}
+            />
+          </CinemaCard>
+        </View>
+
+        {/* Filmmaker Creative Preferences */}
+        <View style={styles.section}>
+          <AppText variant="badge" color={CinemaTheme.colors.primary} style={styles.sectionLabel}>
+            FILMMAKER PREFERENCES
+          </AppText>
+
+          <CinemaCard style={styles.preferencesCard}>
+            <AppText variant="bodyBold">Default Camera Color Profile</AppText>
+            <AppText variant="caption" color={CinemaTheme.colors.textSecondary} style={styles.prefSubtitle}>
+              Sets the primary color transform profile for before/after comparison previews.
+            </AppText>
+
+            <View style={styles.cameraPillsRow}>
+              {CAMERA_PROFILES.map((cam) => {
+                const isSelected = selectedCamera === cam;
+                return (
+                  <TouchableOpacity
+                    key={cam}
+                    onPress={() => setSelectedCamera(cam)}
+                    style={[
+                      styles.cameraPill,
+                      isSelected && styles.cameraPillSelected,
+                    ]}
+                    activeOpacity={0.7}
+                  >
+                    <AppText
+                      variant="caption"
+                      color={isSelected ? CinemaTheme.colors.background : CinemaTheme.colors.textSecondary}
+                    >
+                      {cam}
+                    </AppText>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <View style={styles.prefDivider} />
+
+            <View style={styles.diagRow}>
+              <AppText variant="body">Comparison Engine</AppText>
+              <AppText variant="caption" color={CinemaTheme.colors.primary}>
+                PANRESPONDER 60FPS
+              </AppText>
+            </View>
+
+            <View style={styles.diagRow}>
+              <AppText variant="body">App Version</AppText>
+              <AppText variant="caption" color={CinemaTheme.colors.textTertiary}>
+                v1.0.0 (Cinema SDK 57)
               </AppText>
             </View>
           </CinemaCard>
@@ -290,9 +486,9 @@ const styles = StyleSheet.create({
     gap: CinemaTheme.spacing.md,
   },
   avatarCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: CinemaTheme.colors.card,
     borderWidth: 1.5,
     borderColor: CinemaTheme.colors.primary,
@@ -301,15 +497,18 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   avatarImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
   },
   profileInfo: {
     flex: 1,
     gap: 2,
   },
-  tierBadge: {
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: CinemaTheme.spacing.xs,
     marginTop: 4,
   },
   section: {
@@ -318,6 +517,29 @@ const styles = StyleSheet.create({
   sectionLabel: {
     marginBottom: CinemaTheme.spacing.xs,
     marginLeft: 2,
+  },
+  subscriptionCard: {
+    gap: CinemaTheme.spacing.sm,
+  },
+  tierHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: CinemaTheme.spacing.xs,
+  },
+  tierDesc: {
+    lineHeight: 18,
+  },
+  featuresList: {
+    gap: 6,
+    marginVertical: 4,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: CinemaTheme.spacing.xs,
+  },
+  tierToggleBtn: {
+    marginTop: CinemaTheme.spacing.xs,
   },
   authCard: {
     gap: CinemaTheme.spacing.xs,
@@ -373,8 +595,40 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderBottomWidth: 1,
     borderBottomColor: CinemaTheme.colors.divider,
+  },
+  pingBtn: {
+    marginTop: CinemaTheme.spacing.xs,
+  },
+  preferencesCard: {
+    gap: CinemaTheme.spacing.sm,
+  },
+  prefSubtitle: {
+    lineHeight: 18,
+  },
+  cameraPillsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: CinemaTheme.spacing.xs,
+    marginVertical: 4,
+  },
+  cameraPill: {
+    paddingHorizontal: CinemaTheme.spacing.sm,
+    paddingVertical: 6,
+    borderRadius: CinemaTheme.radius.sm,
+    borderWidth: 1,
+    borderColor: CinemaTheme.colors.divider,
+    backgroundColor: CinemaTheme.colors.cardElevated,
+  },
+  cameraPillSelected: {
+    backgroundColor: CinemaTheme.colors.primary,
+    borderColor: CinemaTheme.colors.primary,
+  },
+  prefDivider: {
+    height: 1,
+    backgroundColor: CinemaTheme.colors.divider,
+    marginVertical: 4,
   },
 });

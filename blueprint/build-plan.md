@@ -20,7 +20,7 @@ Sequential development roadmap. Each item is a reviewable slice of functionality
 - [x] 8. **Google OAuth & AuthContext** — `expo-auth-session` Google provider, extract `sub` via Google userinfo endpoint, `AuthContext` with loading state
 - [x] 9. **Backend Profile Sync** — Wire sign-in to `POST /api/auth/google`, upsert `profiles`, persist user in AsyncStorage
 - [x] 10. **Demo Mode (Alex Turner) Fallback** — One-tap `demo-filmmaker-001` sign-in matching web demo user for evaluator access
-- [ ] 11. **Profile & Account Screen** — `ProfileScreen` with avatar, name, email, Pro badge, Google sign-in/out, and backend connectivity status
+- [x] 11. **Profile & Account Screen** — `ProfileScreen` with avatar, name, email, Pro badge, Google sign-in/out, and backend connectivity status
 
 ## Milestone 4: Bi-Directional Cart & Real-Time Sync
 

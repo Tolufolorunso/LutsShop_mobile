@@ -39,5 +39,6 @@ export interface AuthContextType {
   syncStatus: AuthSyncStatus;
   signInWithGoogle: () => Promise<void>;
   signInAsDemo: () => Promise<void>;
+  toggleProTier: () => Promise<void>;
   signOut: () => Promise<void>;
 }

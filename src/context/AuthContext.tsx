@@ -211,6 +211,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [syncUserProfileWithBackend]);
 
+  // Toggle Pro status for evaluation and testing
+  const toggleProTier = useCallback(async () => {
+    if (!user) return;
+    const updatedUser: AuthUser = {
+      ...user,
+      isPro: !user.isPro,
+    };
+    setUser(updatedUser);
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUser));
+    } catch (err) {
+      console.warn('Error saving updated pro tier to storage:', err);
+    }
+  }, [user]);
+
   const signOut = useCallback(async () => {
     setUser(null);
     setError(null);
@@ -231,6 +246,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         syncStatus,
         signInWithGoogle,
         signInAsDemo,
+        toggleProTier,
         signOut,
       }}
     >
