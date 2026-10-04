@@ -5,7 +5,7 @@ Sequential development roadmap. Each item is a reviewable slice of functionality
 ## Milestone 1: Environment Setup & Cinema Theme Foundation
 
 - [x] 1. **Expo TypeScript Scaffold & Theme Tokens** — Configure Expo Router entry, install navigation/storage dependencies, define `CinemaTheme` tokens (`#0a0b0e`, `#00E5FF`, etc.) in `src/theme/index.ts`
-- [ ] 2. **Core Reusable UI Components** — Build `CinemaHeader`, `AppButton` (solid + outlined), `AppText`, `BadgePill`, `CinemaCard` with cinema dark styling
+- [x] 2. **Core Reusable UI Components** — Build `CinemaHeader`, `AppButton` (solid + outlined), `AppText`, `BadgePill`, `CinemaCard` with cinema dark styling
 - [ ] 3. **Bottom Tab Navigation Shell** — 4-tab layout (Shop, Cart, Library, Account) with dark glassmorphic tab bar and active cyan highlights
 
 ## Milestone 2: Shop Catalog & Interactive Split Slider

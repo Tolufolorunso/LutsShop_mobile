@@ -1,32 +1,139 @@
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Text, View } from 'react-native';
+import {
+  AppButton,
+  AppText,
+  BadgePill,
+  CinemaCard,
+  CinemaHeader,
+} from '@/components/ui';
 import { CinemaTheme } from '@/theme';
 
 export default function Index() {
+  const [cartCount, setCartCount] = useState(2);
+  const [btnLoading, setBtnLoading] = useState(false);
+  const [clickCount, setClickCount] = useState(0);
+
+  const handleTestCart = () => {
+    setCartCount((prev) => (prev >= 5 ? 0 : prev + 1));
+  };
+
+  const handleTestLoading = () => {
+    setBtnLoading(true);
+    setTimeout(() => {
+      setBtnLoading(false);
+    }, 1500);
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.logoBadge}>
-        <Ionicons name="videocam" size={28} color={CinemaTheme.colors.primary} />
-      </View>
+      <CinemaHeader
+        title="LUTSHOP"
+        subtitle="CINEMA DESIGN SYSTEM"
+        cartCount={cartCount}
+        onCartPress={handleTestCart}
+      />
 
-      <Text style={styles.brandTitle}>LUTSHOP</Text>
-      <Text style={styles.tagline}>CINEMA COLOR GRADING PRESETS</Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <CinemaCard elevated style={styles.heroCard}>
+          <AppText variant="h2" color={CinemaTheme.colors.primary}>
+            UI System Showcase
+          </AppText>
+          <AppText variant="body" color={CinemaTheme.colors.textSecondary} style={styles.heroText}>
+            Core reusable components matching the cinema dark palette and typography rules.
+          </AppText>
+          <View style={styles.badgeRow}>
+            <BadgePill label="SONY S-LOG3" variant="camera" />
+            <BadgePill label="BEST SELLER" variant="gold" />
+            <BadgePill label="VERIFIED" variant="success" />
+          </View>
+        </CinemaCard>
 
-      <View style={styles.card}>
-        <View style={styles.statusRow}>
-          <View style={styles.dot} />
-          <Text style={styles.statusText}>FOUNDATION READY</Text>
+        <View style={styles.section}>
+          <AppText variant="badge" color={CinemaTheme.colors.primary} style={styles.sectionLabel}>
+            TYPOGRAPHY SCALE
+          </AppText>
+          <CinemaCard style={styles.cardSpacing}>
+            <AppText variant="h1">Heading 1 (28px)</AppText>
+            <AppText variant="h2">Heading 2 (22px)</AppText>
+            <AppText variant="h3">Heading 3 (18px)</AppText>
+            <AppText variant="bodyBold">Body Bold (14px)</AppText>
+            <AppText variant="body">Body regular text with muted secondary color.</AppText>
+            <AppText variant="caption">Caption text (12px) for specs and metadata</AppText>
+            <AppText variant="badge">BADGE TEXT (11px TRACKED)</AppText>
+          </CinemaCard>
         </View>
 
-        <Text style={styles.cardTitle}>Cinema Theme Initialized</Text>
-        <Text style={styles.cardBody}>
-          Scaffold, design tokens, safe area layout, and icons loaded successfully.
-        </Text>
-
-        <View style={styles.tokenPill}>
-          <Text style={styles.tokenText}>#0a0b0e - DEEP CINEMA BLACK</Text>
+        <View style={styles.section}>
+          <AppText variant="badge" color={CinemaTheme.colors.primary} style={styles.sectionLabel}>
+            BADGES & PILLS
+          </AppText>
+          <CinemaCard style={styles.cardSpacing}>
+            <View style={styles.wrapRow}>
+              <BadgePill label="APPLE LOG" variant="camera" />
+              <BadgePill label="CANON C-LOG" variant="camera" />
+              <BadgePill label="BEST SELLER" variant="gold" />
+              <BadgePill label="PRO CREATOR" variant="primary" />
+              <BadgePill label="ORDER CONFIRMED" variant="success" />
+              <BadgePill label="FAILED" variant="error" />
+            </View>
+          </CinemaCard>
         </View>
-      </View>
+
+        <View style={styles.section}>
+          <AppText variant="badge" color={CinemaTheme.colors.primary} style={styles.sectionLabel}>
+            BUTTON VARIANTS
+          </AppText>
+          <CinemaCard style={styles.cardSpacing}>
+            <AppButton
+              title="PRIMARY CYAN CTA"
+              variant="primary"
+              onPress={handleTestCart}
+              style={styles.btnSpacing}
+              icon={<Ionicons name="cart" size={16} color="#000000" />}
+            />
+            <AppButton
+              title="OUTLINE BUTTON"
+              variant="outline"
+              onPress={handleTestLoading}
+              loading={btnLoading}
+              style={styles.btnSpacing}
+            />
+            <AppButton
+              title="SECONDARY ACTION"
+              variant="secondary"
+              onPress={() => {}}
+              style={styles.btnSpacing}
+            />
+            <AppButton
+              title="DISABLED BUTTON"
+              variant="primary"
+              disabled
+              onPress={() => {}}
+            />
+          </CinemaCard>
+        </View>
+
+        <View style={styles.section}>
+          <AppText variant="badge" color={CinemaTheme.colors.primary} style={styles.sectionLabel}>
+            INTERACTIVE CARDS
+          </AppText>
+          <CinemaCard
+            elevated
+            onPress={() => setClickCount((prev) => prev + 1)}
+            style={styles.cardSpacing}
+          >
+            <AppText variant="h3">Tap this card to test touch feedback</AppText>
+            <AppText variant="body" color={CinemaTheme.colors.textSecondary}>
+              Click counter: {clickCount} taps
+            </AppText>
+          </CinemaCard>
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -35,78 +142,40 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: CinemaTheme.colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: CinemaTheme.spacing.lg,
   },
-  logoBadge: {
-    width: 64,
-    height: 64,
-    borderRadius: CinemaTheme.radius.xl,
-    backgroundColor: CinemaTheme.colors.cardElevated,
-    borderWidth: 1,
-    borderColor: CinemaTheme.colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: CinemaTheme.spacing.md,
+  scrollContent: {
+    padding: CinemaTheme.spacing.md,
+    paddingBottom: CinemaTheme.spacing.xl + 20,
   },
-  brandTitle: {
-    ...CinemaTheme.typography.h1,
-    color: CinemaTheme.colors.textPrimary,
-    letterSpacing: 2,
+  heroCard: {
+    marginBottom: CinemaTheme.spacing.lg,
+    borderColor: CinemaTheme.colors.primaryGlow,
   },
-  tagline: {
-    ...CinemaTheme.typography.caption,
-    color: CinemaTheme.colors.primary,
-    letterSpacing: 1.5,
+  heroText: {
     marginTop: CinemaTheme.spacing.xs,
-    marginBottom: CinemaTheme.spacing.xl,
-  },
-  card: {
-    width: '100%',
-    backgroundColor: CinemaTheme.colors.card,
-    borderRadius: CinemaTheme.radius.lg,
-    borderWidth: 1,
-    borderColor: CinemaTheme.colors.divider,
-    padding: CinemaTheme.spacing.lg,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: CinemaTheme.spacing.sm,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: CinemaTheme.colors.success,
-    marginRight: CinemaTheme.spacing.xs,
-  },
-  statusText: {
-    ...CinemaTheme.typography.badge,
-    color: CinemaTheme.colors.success,
-  },
-  cardTitle: {
-    ...CinemaTheme.typography.h3,
-    color: CinemaTheme.colors.textPrimary,
-    marginBottom: CinemaTheme.spacing.xs,
-  },
-  cardBody: {
-    ...CinemaTheme.typography.body,
-    color: CinemaTheme.colors.textSecondary,
     marginBottom: CinemaTheme.spacing.md,
   },
-  tokenPill: {
-    backgroundColor: CinemaTheme.colors.cardElevated,
-    borderRadius: CinemaTheme.radius.sm,
-    paddingHorizontal: CinemaTheme.spacing.md,
-    paddingVertical: CinemaTheme.spacing.xs,
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: CinemaTheme.colors.divider,
+  badgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: CinemaTheme.spacing.xs,
   },
-  tokenText: {
-    ...CinemaTheme.typography.caption,
-    color: CinemaTheme.colors.textTertiary,
+  section: {
+    marginBottom: CinemaTheme.spacing.lg,
+  },
+  sectionLabel: {
+    marginBottom: CinemaTheme.spacing.xs,
+    marginLeft: 2,
+  },
+  cardSpacing: {
+    gap: CinemaTheme.spacing.sm,
+  },
+  wrapRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: CinemaTheme.spacing.xs,
+  },
+  btnSpacing: {
+    marginBottom: CinemaTheme.spacing.sm,
   },
 });
