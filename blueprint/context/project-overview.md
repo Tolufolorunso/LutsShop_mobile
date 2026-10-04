@@ -1,6 +1,6 @@
 # LUTShop Mobile - Project Overview
 
-<!-- blueprint:source-hash 2f9e1bc13c3a77f3f73f7b74a620429588d94cac98d35a68f06def6b6a06d9db -->
+<!-- blueprint:source-hash 36136355d2e89da7d6c17037e1037944ba6475fa58c4e921f55bef71f6f370c2 -->
 
 > Cinema-grade React Native companion app for iOS and Android that gives videographers on-the-go access to the LUTShop LUT catalog, interactive before/after split grading previews, cross-platform Google auth, real-time bi-directional cart sync, mobile checkout, and a digital purchase library.
 

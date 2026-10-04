@@ -2,7 +2,6 @@ import React, { useState, useCallback } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Modal,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -50,7 +49,6 @@ export default function ShopScreen() {
   } = useProducts();
 
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
-  const [modalProduct, setModalProduct] = useState<Product | null>(null);
 
   const handleAddToCart = useCallback((product: Product) => {
     setAddedIds((prev) => {
@@ -64,13 +62,15 @@ export default function ShopScreen() {
     });
   }, []);
 
-  const handleProductPress = useCallback((product: Product) => {
-    setModalProduct(product);
-  }, []);
-
-  const closeModal = useCallback(() => {
-    setModalProduct(null);
-  }, []);
+  const handleProductPress = useCallback(
+    (product: Product) => {
+      router.push({
+        pathname: '/product/[slug]',
+        params: { slug: product.slug },
+      });
+    },
+    [router]
+  );
 
   const renderProductItem = useCallback(
     ({ item }: { item: Product }) => (
@@ -195,10 +195,15 @@ export default function ShopScreen() {
 
             <View style={styles.heroBtnGroup}>
               <AppButton
-                title="FULLSCREEN"
+                title="DETAILS"
                 variant="outline"
                 size="sm"
-                onPress={() => setModalProduct(featuredProduct)}
+                onPress={() =>
+                  router.push({
+                    pathname: '/product/[slug]',
+                    params: { slug: featuredProduct.slug },
+                  })
+                }
               />
               <AppButton
                 title={addedIds.has(featuredProduct.id) ? 'ADDED ✓' : '+ ADD TO CART'}
@@ -298,111 +303,6 @@ export default function ShopScreen() {
         }
       />
 
-      {/* Fullscreen Split Comparison Modal */}
-      <Modal
-        visible={modalProduct !== null}
-        animationType="slide"
-        transparent
-        onRequestClose={closeModal}
-      >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalContent}>
-            {/* Modal Header */}
-            <View style={styles.modalHeader}>
-              <View style={styles.modalTitleContainer}>
-                <AppText variant="h2" numberOfLines={1}>
-                  {modalProduct?.title}
-                </AppText>
-                <AppText
-                  variant="caption"
-                  color={CinemaTheme.colors.primary}
-                  numberOfLines={1}
-                >
-                  {modalProduct?.supportedCameras.join(' • ')}
-                </AppText>
-              </View>
-
-              <TouchableOpacity
-                style={styles.modalCloseBtn}
-                onPress={closeModal}
-                activeOpacity={0.8}
-              >
-                <Ionicons
-                  name="close"
-                  size={20}
-                  color={CinemaTheme.colors.textPrimary}
-                />
-              </TouchableOpacity>
-            </View>
-
-            {/* Split Comparison Slider in Modal */}
-            {modalProduct && (
-              <SplitComparisonView
-                beforeUrl={modalProduct.beforeImageUrl}
-                afterUrl={modalProduct.afterImageUrl}
-                height={300}
-                beforeLabel="RAW LOG"
-                afterLabel={modalProduct.category.toUpperCase()}
-                style={styles.modalSlider}
-              />
-            )}
-
-            <AppText
-              variant="caption"
-              color={CinemaTheme.colors.textTertiary}
-              style={styles.modalInstructions}
-            >
-              DRAG THE CYAN DIVIDER HANDLE TO COMPARE LOG FOOTAGE & CINEMA COLOR GRADE
-            </AppText>
-
-            {/* Modal Description */}
-            <AppText
-              variant="body"
-              color={CinemaTheme.colors.textSecondary}
-              style={styles.modalDescription}
-            >
-              {modalProduct?.description}
-            </AppText>
-
-            {/* Modal Footer */}
-            <View style={styles.modalFooter}>
-              <View>
-                <AppText variant="caption" color={CinemaTheme.colors.textTertiary}>
-                  {modalProduct?.lutCount} LUTS INCLUDED
-                </AppText>
-                <AppText variant="h2" color={CinemaTheme.colors.primary}>
-                  ${modalProduct?.price}.00
-                </AppText>
-              </View>
-
-              <View style={styles.modalBtnRow}>
-                <AppButton
-                  title="CLOSE"
-                  variant="outline"
-                  size="sm"
-                  onPress={closeModal}
-                />
-                {modalProduct && (
-                  <AppButton
-                    title={
-                      addedIds.has(modalProduct.id)
-                        ? 'ADDED ✓'
-                        : '+ ADD TO CART'
-                    }
-                    variant={
-                      addedIds.has(modalProduct.id)
-                        ? 'secondary'
-                        : 'primary'
-                    }
-                    size="sm"
-                    onPress={() => handleAddToCart(modalProduct)}
-                  />
-                )}
-              </View>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -522,63 +422,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     maxWidth: 280,
     marginBottom: CinemaTheme.spacing.sm,
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: CinemaTheme.colors.card,
-    borderTopLeftRadius: CinemaTheme.radius.xl,
-    borderTopRightRadius: CinemaTheme.radius.xl,
-    borderWidth: 1,
-    borderColor: CinemaTheme.colors.divider,
-    padding: CinemaTheme.spacing.lg,
-    maxHeight: '90%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: CinemaTheme.spacing.md,
-  },
-  modalTitleContainer: {
-    flex: 1,
-    marginRight: CinemaTheme.spacing.md,
-  },
-  modalCloseBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: CinemaTheme.colors.cardElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: CinemaTheme.colors.divider,
-  },
-  modalSlider: {
-    marginBottom: CinemaTheme.spacing.sm,
-  },
-  modalInstructions: {
-    textAlign: 'center',
-    marginBottom: CinemaTheme.spacing.md,
-    letterSpacing: 0.5,
-  },
-  modalDescription: {
-    lineHeight: 20,
-    marginBottom: CinemaTheme.spacing.lg,
-  },
-  modalFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: CinemaTheme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: CinemaTheme.colors.divider,
-  },
-  modalBtnRow: {
-    flexDirection: 'row',
-    gap: CinemaTheme.spacing.sm,
   },
 });

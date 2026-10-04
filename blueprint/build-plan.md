@@ -13,7 +13,7 @@ Sequential development roadmap. Each item is a reviewable slice of functionality
 - [x] 4. **API Client & Product Catalog State** — `src/config/api.ts` with env-configurable base URL, product fetch hooks with search and category filtering
 - [x] 5. **Cinema Product Card & Catalog Screen** — `ShopScreen` with search bar, camera filter pills, FlatList of `ProductCard` components with before/after thumbnails
 - [x] 6. **Touch-Enabled Before/After Split Comparison Slider** — `SplitComparisonView` using `PanResponder` with neon cyan divider handle at smooth 60fps
-- [ ] 7. **Product Details Screen** — `ProductDetailScreen` with full-width split slider, technical specs, and sticky Add-to-Cart bottom bar
+- [x] 7. **Product Details Screen** — `ProductDetailScreen` with full-width split slider, technical specs, and sticky Add-to-Cart bottom bar
 
 ## Milestone 3: Google Authentication & Cross-Platform Identity
 
