@@ -41,3 +41,13 @@ example
 # generated native folders
 /ios
 /android
+
+# Blueprint generated state (not app source)
+blueprint/.state/run.json
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Editor
+.vscode/settings.json
