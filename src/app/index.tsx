@@ -1,98 +1,112 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, Text, View } from 'react-native';
+import { CinemaTheme } from '@/theme';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+export default function Index() {
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+    <View style={styles.container}>
+      <View style={styles.logoBadge}>
+        <Ionicons name="videocam" size={28} color={CinemaTheme.colors.primary} />
+      </View>
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+      <Text style={styles.brandTitle}>LUTSHOP</Text>
+      <Text style={styles.tagline}>CINEMA COLOR GRADING PRESETS</Text>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+      <View style={styles.card}>
+        <View style={styles.statusRow}>
+          <View style={styles.dot} />
+          <Text style={styles.statusText}>FOUNDATION READY</Text>
+        </View>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+        <Text style={styles.cardTitle}>Cinema Theme Initialized</Text>
+        <Text style={styles.cardBody}>
+          Scaffold, design tokens, safe area layout, and icons loaded successfully.
+        </Text>
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+        <View style={styles.tokenPill}>
+          <Text style={styles.tokenText}>#0a0b0e - DEEP CINEMA BLACK</Text>
+        </View>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: CinemaTheme.colors.background,
+    alignItems: 'center',
     justifyContent: 'center',
+    padding: CinemaTheme.spacing.lg,
+  },
+  logoBadge: {
+    width: 64,
+    height: 64,
+    borderRadius: CinemaTheme.radius.xl,
+    backgroundColor: CinemaTheme.colors.cardElevated,
+    borderWidth: 1,
+    borderColor: CinemaTheme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: CinemaTheme.spacing.md,
+  },
+  brandTitle: {
+    ...CinemaTheme.typography.h1,
+    color: CinemaTheme.colors.textPrimary,
+    letterSpacing: 2,
+  },
+  tagline: {
+    ...CinemaTheme.typography.caption,
+    color: CinemaTheme.colors.primary,
+    letterSpacing: 1.5,
+    marginTop: CinemaTheme.spacing.xs,
+    marginBottom: CinemaTheme.spacing.xl,
+  },
+  card: {
+    width: '100%',
+    backgroundColor: CinemaTheme.colors.card,
+    borderRadius: CinemaTheme.radius.lg,
+    borderWidth: 1,
+    borderColor: CinemaTheme.colors.divider,
+    padding: CinemaTheme.spacing.lg,
+  },
+  statusRow: {
     flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
     alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+    marginBottom: CinemaTheme.spacing.sm,
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: CinemaTheme.colors.success,
+    marginRight: CinemaTheme.spacing.xs,
   },
-  title: {
-    textAlign: 'center',
+  statusText: {
+    ...CinemaTheme.typography.badge,
+    color: CinemaTheme.colors.success,
   },
-  code: {
-    textTransform: 'uppercase',
+  cardTitle: {
+    ...CinemaTheme.typography.h3,
+    color: CinemaTheme.colors.textPrimary,
+    marginBottom: CinemaTheme.spacing.xs,
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  cardBody: {
+    ...CinemaTheme.typography.body,
+    color: CinemaTheme.colors.textSecondary,
+    marginBottom: CinemaTheme.spacing.md,
+  },
+  tokenPill: {
+    backgroundColor: CinemaTheme.colors.cardElevated,
+    borderRadius: CinemaTheme.radius.sm,
+    paddingHorizontal: CinemaTheme.spacing.md,
+    paddingVertical: CinemaTheme.spacing.xs,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: CinemaTheme.colors.divider,
+  },
+  tokenText: {
+    ...CinemaTheme.typography.caption,
+    color: CinemaTheme.colors.textTertiary,
   },
 });
