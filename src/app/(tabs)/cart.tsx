@@ -9,12 +9,13 @@ import {
   CinemaCard,
   CinemaHeader,
 } from '@/components/ui';
-import { CinemaTheme } from '@/theme';
+import { CartItemCard } from '@/components/cart';
 import { useCart } from '@/context';
+import { CinemaTheme } from '@/theme';
 
 export default function CartScreen() {
   const router = useRouter();
-  const { itemCount, refresh } = useCart();
+  const { items, itemCount, subtotal, removeItem, refresh } = useCart();
 
   // Re-sync with the backend whenever the Cart tab gains focus
   useFocusEffect(
@@ -23,64 +24,122 @@ export default function CartScreen() {
     }, [refresh])
   );
 
+  const isEmpty = itemCount === 0;
+
   return (
     <View style={styles.container}>
       <CinemaHeader
         title="YOUR CART"
-        subtitle={itemCount === 1 ? '1 ITEM' : `${itemCount} ITEMS`}
+        subtitle={isEmpty ? '0 ITEMS' : itemCount === 1 ? '1 ITEM' : `${itemCount} ITEMS`}
       />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          isEmpty ? styles.scrollContent : styles.listContent,
+        ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.emptyContainer}>
-          <View style={styles.iconCircle}>
-            <Ionicons
-              name="bag-outline"
-              size={40}
-              color={CinemaTheme.colors.primary}
-            />
-          </View>
-
-          <AppText variant="h2" style={styles.emptyTitle}>
-            Your Cart is Empty
-          </AppText>
-
-          <AppText
-            variant="body"
-            color={CinemaTheme.colors.textSecondary}
-            style={styles.emptySubtitle}
-          >
-            Explore our cinema color grading catalog and add LUT packs to your cart. Items will automatically sync with your desktop workstation.
-          </AppText>
-
-          <AppButton
-            title="BROWSE CINEMA SHOP"
-            variant="primary"
-            size="md"
-            onPress={() => router.push('/(tabs)')}
-            icon={<Ionicons name="sparkles" size={16} color="#000000" />}
-            style={styles.exploreBtn}
-          />
-        </View>
-
-        <CinemaCard elevated style={styles.infoCard}>
-          <View style={styles.infoRow}>
-            <Ionicons
-              name="sync-circle"
-              size={22}
-              color={CinemaTheme.colors.primary}
-            />
-            <View style={styles.infoContent}>
-              <AppText variant="bodyBold">Bi-Directional Cloud Sync</AppText>
-              <AppText variant="caption" color={CinemaTheme.colors.textSecondary}>
-                Any item added here immediately syncs with your desktop browser when you sign in.
-              </AppText>
+        {isEmpty ? (
+          <>
+            <View style={styles.emptyContainer}>
+            <View style={styles.iconCircle}>
+              <Ionicons
+                name="bag-outline"
+                size={40}
+                color={CinemaTheme.colors.primary}
+              />
             </View>
+
+            <AppText variant="h2" style={styles.emptyTitle}>
+              Your Cart is Empty
+            </AppText>
+
+            <AppText
+              variant="body"
+              color={CinemaTheme.colors.textSecondary}
+              style={styles.emptySubtitle}
+            >
+              Explore our cinema color grading catalog and add LUT packs to your cart. Items will automatically sync with your desktop workstation.
+            </AppText>
+
+            <AppButton
+              title="BROWSE CINEMA SHOP"
+              variant="primary"
+              size="md"
+              onPress={() => router.push('/(tabs)')}
+              icon={<Ionicons name="sparkles" size={16} color="#000000" />}
+              style={styles.exploreBtn}
+            />
           </View>
-          <BadgePill label="REAL-TIME SYNC READY" variant="primary" size="sm" style={styles.badge} />
-        </CinemaCard>
+
+          <CinemaCard elevated style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              <Ionicons
+                name="sync-circle"
+                size={22}
+                color={CinemaTheme.colors.primary}
+              />
+              <View style={styles.infoContent}>
+                <AppText variant="bodyBold">Bi-Directional Cloud Sync</AppText>
+                <AppText variant="caption" color={CinemaTheme.colors.textSecondary}>
+                  Any item added here immediately syncs with your desktop browser when you sign in.
+                </AppText>
+              </View>
+            </View>
+            <BadgePill label="REAL-TIME SYNC READY" variant="primary" size="sm" style={styles.badge} />
+          </CinemaCard>
+          </>
+        ) : (
+          <>
+            {items.map((item) => (
+              <CartItemCard
+                key={item.id}
+                item={item}
+                onRemove={removeItem}
+                style={styles.itemCard}
+              />
+            ))}
+
+            <CinemaCard elevated style={styles.summaryCard}>
+              <AppText variant="caption" color={CinemaTheme.colors.primary}>
+                ORDER SUMMARY
+              </AppText>
+
+              <View style={styles.summaryRow}>
+                <AppText
+                  variant="body"
+                  color={CinemaTheme.colors.textSecondary}
+                >
+                  ITEM COUNT
+                </AppText>
+                <AppText variant="bodyBold">
+                  {itemCount === 1 ? '1 ITEM' : `${itemCount} ITEMS`}
+                </AppText>
+              </View>
+
+              <View style={styles.summaryRow}>
+                <AppText
+                  variant="body"
+                  color={CinemaTheme.colors.textSecondary}
+                >
+                  SUBTOTAL
+                </AppText>
+                <AppText variant="h3" color={CinemaTheme.colors.primary}>
+                  ${subtotal}.00
+                </AppText>
+              </View>
+
+              <AppButton
+                title="PROCEED TO CHECKOUT"
+                variant="primary"
+                size="md"
+                disabled
+                onPress={() => {}}
+                style={styles.checkoutBtn}
+              />
+            </CinemaCard>
+          </>
+        )}
       </ScrollView>
     </View>
   );
@@ -96,6 +155,10 @@ const styles = StyleSheet.create({
     paddingBottom: CinemaTheme.spacing.xl + 20,
     flexGrow: 1,
     justifyContent: 'center',
+  },
+  listContent: {
+    padding: CinemaTheme.spacing.md,
+    paddingBottom: CinemaTheme.spacing.xl + 20,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -140,5 +203,24 @@ const styles = StyleSheet.create({
   badge: {
     marginTop: CinemaTheme.spacing.sm,
     alignSelf: 'flex-start',
+  },
+  itemCard: {
+    marginBottom: CinemaTheme.spacing.sm,
+  },
+  summaryCard: {
+    marginTop: CinemaTheme.spacing.md,
+    gap: CinemaTheme.spacing.sm,
+    borderColor: CinemaTheme.colors.primaryGlow,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: CinemaTheme.spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: CinemaTheme.colors.divider,
+  },
+  checkoutBtn: {
+    marginTop: CinemaTheme.spacing.xs,
   },
 });
