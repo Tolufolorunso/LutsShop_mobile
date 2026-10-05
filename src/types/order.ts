@@ -17,3 +17,22 @@ export interface OrderSubmissionResponse {
   order?: { id?: string };
   [key: string]: unknown;
 }
+
+/** Normalized purchased pack rendered by My Library. */
+export interface PurchaseOrderItem {
+  id: string;
+  title: string;
+  price: number;
+  thumbnailUrl: string | null;
+  category: string | null;
+  lutCount: number | null;
+  downloadUrl: string | null;
+}
+
+/** Normalized order record rendered by My Library. */
+export interface PurchaseOrder {
+  id: string;
+  createdAt: string | null;
+  paymentMethod: string | null;
+  items: PurchaseOrderItem[];
+}

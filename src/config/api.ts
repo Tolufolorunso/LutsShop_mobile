@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 import { MOCK_PRODUCTS } from '../data/mockProducts';
 import { Product, ProductFilterParams } from '../types/product';
 import { RawCartEnvelope, RawCartRow } from '../types/cart';
-import { CreateOrderPayload, OrderSubmissionResponse } from '../types/order';
+import { CreateOrderPayload, OrderSubmissionResponse, PurchaseOrder, PurchaseOrderItem } from '../types/order';
 
 // Determine default base URL based on runtime environment
 const getDefaultBaseUrl = (): string => {
@@ -306,4 +306,84 @@ export const placeOrder = async (
   payload: CreateOrderPayload
 ): Promise<OrderSubmissionResponse> => {
   return apiClient.post<OrderSubmissionResponse>('/api/orders', payload);
+};
+
+// ---------------------------------------------------------------------------
+// Order history (GET /api/orders) — My Library
+// ---------------------------------------------------------------------------
+
+// The GET /api/orders response shape is unconfirmed; tolerate a bare array or
+// an { orders | items } envelope, and snake_case or camelCase fields.
+const pickString = (row: Record<string, unknown>, keys: string[]): string | null => {
+  for (const key of keys) {
+    const value = row[key];
+    if (typeof value === 'string' && value.length > 0) return value;
+  }
+  return null;
+};
+
+const pickNumber = (row: Record<string, unknown>, keys: string[]): number | null => {
+  for (const key of keys) {
+    const value = row[key];
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+  }
+  return null;
+};
+
+const normalizeOrderItems = (rawItems: unknown): PurchaseOrderItem[] => {
+  if (!Array.isArray(rawItems)) return [];
+
+  const items: PurchaseOrderItem[] = [];
+  for (const entry of rawItems) {
+    if (!entry || typeof entry !== 'object') continue;
+    const row = entry as Record<string, unknown>;
+    const title = pickString(row, ['title']);
+    if (!title) {
+      console.warn('Order history: skipping item without a title');
+      continue;
+    }
+    items.push({
+      id: pickString(row, ['id', 'product_id', 'productId']) ?? title,
+      title,
+      price: pickNumber(row, ['price']) ?? 0,
+      thumbnailUrl: pickString(row, ['thumbnailUrl', 'thumbnail_url']),
+      category: pickString(row, ['category']),
+      lutCount: pickNumber(row, ['lutCount', 'lut_count']),
+      downloadUrl: pickString(row, ['downloadUrl', 'download_url']),
+    });
+  }
+  return items;
+};
+
+export const fetchOrderHistory = async (userId: string): Promise<PurchaseOrder[]> => {
+  const data = await apiClient.get<unknown>(
+    '/api/orders',
+    { userId },
+    { timeoutMs: 8000 }
+  );
+
+  let list: unknown = data;
+  if (data && typeof data === 'object' && !Array.isArray(data)) {
+    const envelope = data as { orders?: unknown; items?: unknown };
+    list = envelope.orders ?? envelope.items ?? [];
+  }
+  if (!Array.isArray(list)) return [];
+
+  const orders: PurchaseOrder[] = [];
+  for (const entry of list) {
+    if (!entry || typeof entry !== 'object') continue;
+    const row = entry as Record<string, unknown>;
+    const items = normalizeOrderItems(row.items);
+    if (items.length === 0) {
+      console.warn('Order history: skipping order with no renderable items');
+      continue;
+    }
+    orders.push({
+      id: pickString(row, ['id', 'order_id', 'orderId']) ?? `order-${orders.length}`,
+      createdAt: pickString(row, ['created_at', 'createdAt']),
+      paymentMethod: pickString(row, ['payment_method', 'paymentMethod']),
+      items,
+    });
+  }
+  return orders;
 };
