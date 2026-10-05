@@ -9,10 +9,12 @@ export interface CreateOrderPayload {
 }
 
 /**
- * Backend response shape is unconfirmed; parsed tolerantly —
- * only success/failure gates the checkout flow.
+ * Backend response (confirmed against lutshop api/orders):
+ * `{ success: true, orderId, order: { id, totalAmount, createdAt, ... } }`.
+ * Parsed tolerantly — only success/failure gates the checkout flow.
  */
 export interface OrderSubmissionResponse {
+  success?: boolean;
   orderId?: string;
   order?: { id?: string };
   [key: string]: unknown;

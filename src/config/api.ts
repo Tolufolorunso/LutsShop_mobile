@@ -305,7 +305,16 @@ export const clearRemoteCart = async (userId: string): Promise<void> => {
 export const placeOrder = async (
   payload: CreateOrderPayload
 ): Promise<OrderSubmissionResponse> => {
-  return apiClient.post<OrderSubmissionResponse>('/api/orders', payload);
+  // The backend expects items as [{ productId, price }] wire rows, not the
+  // full CartItem snapshot — map before posting (lutshop api/orders POST).
+  const items = payload.items.map((item) => ({
+    productId: item.id,
+    price: item.price,
+  }));
+  return apiClient.post<OrderSubmissionResponse>('/api/orders', {
+    ...payload,
+    items,
+  });
 };
 
 // ---------------------------------------------------------------------------
