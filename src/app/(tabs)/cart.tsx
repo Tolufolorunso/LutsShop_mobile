@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
   AppButton,
@@ -14,7 +14,14 @@ import { useCart } from '@/context';
 
 export default function CartScreen() {
   const router = useRouter();
-  const { itemCount } = useCart();
+  const { itemCount, refresh } = useCart();
+
+  // Re-sync with the backend whenever the Cart tab gains focus
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh])
+  );
 
   return (
     <View style={styles.container}>

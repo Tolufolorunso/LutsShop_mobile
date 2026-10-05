@@ -86,20 +86,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [items, isLoading, userId]);
 
-  // Pull-merge-push sync on sign-in (Google, demo, or restored session), and
-  // local cache drop on sign-out. The remote cart itself is never deleted here.
-  useEffect(() => {
-    if (isAuthLoading) return;
-
-    if (!userId) {
-      // Defer the reset out of the effect body (AuthContext pattern)
-      void Promise.resolve().then(() => {
-        setItems([]);
-        setSyncStatus('idle');
-      });
-      return;
-    }
-
+  // Pull-merge-push sync engine: shared by sign-in and focus refresh
+  const syncCart = useCallback(() => {
+    if (!userId) return;
     if (isSyncingRef.current) return;
     isSyncingRef.current = true;
 
@@ -150,7 +139,24 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isSyncingRef.current = false;
       }
     })();
-  }, [userId, isAuthLoading]);
+  }, [userId]);
+
+  // Sync on sign-in (Google, demo, or restored session); drop the local cache
+  // on sign-out. The remote cart itself is never deleted here.
+  useEffect(() => {
+    if (isAuthLoading) return;
+
+    if (!userId) {
+      // Defer the reset out of the effect body (AuthContext pattern)
+      void Promise.resolve().then(() => {
+        setItems([]);
+        setSyncStatus('idle');
+      });
+      return;
+    }
+
+    syncCart();
+  }, [userId, isAuthLoading, syncCart]);
 
   const addItem = useCallback(
     (product: Product) => {
@@ -212,6 +218,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         removeItem,
         clearCart,
         isInCart,
+        refresh: syncCart,
       }}
     >
       {children}

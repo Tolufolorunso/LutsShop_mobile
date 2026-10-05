@@ -46,6 +46,7 @@ export interface CartContextType {
   removeItem: (productId: string) => void;
   clearCart: () => void;
   isInCart: (productId: string) => boolean;
+  refresh: () => void;   // re-run the pull-merge-push sync (no-op signed out)
 }
 
 /**
