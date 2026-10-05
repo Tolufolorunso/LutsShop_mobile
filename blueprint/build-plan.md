@@ -37,5 +37,5 @@ Sequential development roadmap. Each item is a reviewable slice of functionality
 
 ## Milestone 6: Physical Device Testing & Submission
 
-- [ ] 19. **Network Config & Physical Device Run** — Configure `EXPO_PUBLIC_API_BASE_URL` for LAN/production, run on Expo Go, verify touch gestures and latency
+- [x] 19. **Network Config & Physical Device Run** — Configure `EXPO_PUBLIC_API_BASE_URL` for LAN/production, run on Expo Go, verify touch gestures and latency
 - [ ] 20. **Cross-Platform Verification & Screen Recording** — Live demo: web + mobile side-by-side, same Google account, bi-directional cart update, checkout, library verification
