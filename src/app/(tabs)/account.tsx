@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   ScrollView,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -42,6 +43,19 @@ export default function AccountScreen() {
   } = useBackendDiagnostics();
 
   const [selectedCamera, setSelectedCamera] = useState<string>('Sony S-Log3');
+  const [emailInput, setEmailInput] = useState<string>('');
+  const [passwordInput, setPasswordInput] = useState<string>('');
+  const [emailAuthMsg, setEmailAuthMsg] = useState<string | null>(null);
+
+  const handleEmailSignIn = () => {
+    if (!emailInput.trim()) {
+      setEmailAuthMsg('Please enter your creator email address.');
+      return;
+    }
+    setEmailAuthMsg(
+      'Notice: Cross-platform cloud sync with the web storefront uses Google Identity. Please tap "CONTINUE WITH GOOGLE" or use Demo Mode.'
+    );
+  };
 
   const getSyncStatusText = () => {
     switch (syncStatus) {
@@ -280,8 +294,68 @@ export default function AccountScreen() {
               <>
                 <AppText variant="bodyBold">Sign in to sync your cart</AppText>
                 <AppText variant="body" color={CinemaTheme.colors.textSecondary} style={styles.authText}>
-                  Logging in with Google links your mobile device to your desktop web account using your shared Google ID.
+                  Logging in links your mobile device to your desktop web account using your shared Google ID.
                 </AppText>
+
+                {/* Email / Password section */}
+                <View style={styles.inputGroup}>
+                  <AppText variant="caption" color={CinemaTheme.colors.textTertiary}>
+                    CREATOR EMAIL
+                  </AppText>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="filmmaker@cinema.raw"
+                    placeholderTextColor={CinemaTheme.colors.textTertiary}
+                    value={emailInput}
+                    onChangeText={(t) => {
+                      setEmailInput(t);
+                      setEmailAuthMsg(null);
+                    }}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <AppText variant="caption" color={CinemaTheme.colors.textTertiary}>
+                    PASSWORD
+                  </AppText>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="••••••••••••"
+                    placeholderTextColor={CinemaTheme.colors.textTertiary}
+                    value={passwordInput}
+                    onChangeText={(t) => {
+                      setPasswordInput(t);
+                      setEmailAuthMsg(null);
+                    }}
+                    secureTextEntry
+                  />
+                </View>
+
+                <AppButton
+                  title="SIGN IN WITH EMAIL"
+                  variant="outline"
+                  onPress={handleEmailSignIn}
+                  style={styles.authBtn}
+                />
+
+                {emailAuthMsg && (
+                  <View style={styles.infoBox}>
+                    <Ionicons name="information-circle" size={16} color={CinemaTheme.colors.primary} />
+                    <AppText variant="caption" color={CinemaTheme.colors.primary} style={styles.infoText}>
+                      {emailAuthMsg}
+                    </AppText>
+                  </View>
+                )}
+
+                <View style={styles.orDividerRow}>
+                  <View style={styles.dividerLine} />
+                  <AppText variant="caption" color={CinemaTheme.colors.textTertiary} style={styles.orText}>
+                    OR
+                  </AppText>
+                  <View style={styles.dividerLine} />
+                </View>
 
                 {error && (
                   <View style={styles.errorBox}>
@@ -302,10 +376,10 @@ export default function AccountScreen() {
                 ) : (
                   <>
                     <AppButton
-                      title="SIGN IN WITH GOOGLE"
+                      title="CONTINUE WITH GOOGLE"
                       variant="primary"
                       onPress={signInWithGoogle}
-                      icon={<Ionicons name="logo-google" size={16} color="#000000" />}
+                      icon={<Ionicons name="logo-google" size={18} color="#000000" />}
                       style={styles.authBtn}
                     />
 
@@ -587,6 +661,48 @@ const styles = StyleSheet.create({
   },
   authBtn: {
     marginBottom: CinemaTheme.spacing.sm,
+  },
+  inputGroup: {
+    gap: 4,
+    marginBottom: CinemaTheme.spacing.xs,
+  },
+  textInput: {
+    backgroundColor: CinemaTheme.colors.cardElevated,
+    borderWidth: 1,
+    borderColor: CinemaTheme.colors.divider,
+    borderRadius: CinemaTheme.radius.sm,
+    paddingHorizontal: CinemaTheme.spacing.sm,
+    paddingVertical: 10,
+    color: CinemaTheme.colors.textPrimary,
+    fontSize: 14,
+  },
+  infoBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: CinemaTheme.spacing.xs,
+    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    padding: CinemaTheme.spacing.sm,
+    borderRadius: CinemaTheme.radius.sm,
+    borderWidth: 1,
+    borderColor: CinemaTheme.colors.primary,
+    marginBottom: CinemaTheme.spacing.sm,
+  },
+  infoText: {
+    flex: 1,
+  },
+  orDividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: CinemaTheme.spacing.sm,
+    marginVertical: CinemaTheme.spacing.sm,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: CinemaTheme.colors.divider,
+  },
+  orText: {
+    letterSpacing: 1.5,
   },
   diagCard: {
     gap: CinemaTheme.spacing.sm,

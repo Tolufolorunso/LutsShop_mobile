@@ -1,12 +1,19 @@
 import React from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { CinemaTheme } from '@/theme';
 import { useCart } from '@/context';
 
 export default function TabLayout() {
   const { itemCount } = useCart();
+  const insets = useSafeAreaInsets();
+
+  // Dynamic bottom inset handling for Android system navigation (3-button or gesture bar) and iOS home indicator
+  const bottomInset = insets.bottom;
+  const paddingBottom = bottomInset > 0 ? bottomInset : (Platform.OS === 'ios' ? 24 : 8);
+  const tabBarHeight = 56 + bottomInset;
 
   return (
     <Tabs
@@ -14,7 +21,13 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: CinemaTheme.colors.primary,
         tabBarInactiveTintColor: CinemaTheme.colors.textTertiary,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            height: tabBarHeight,
+            paddingBottom,
+          },
+        ],
         tabBarLabelStyle: styles.tabBarLabel,
       }}
     >
@@ -84,9 +97,7 @@ const styles = StyleSheet.create({
     backgroundColor: CinemaTheme.colors.cardElevated,
     borderTopColor: CinemaTheme.colors.divider,
     borderTopWidth: 1,
-    height: Platform.OS === 'ios' ? 88 : 64,
     paddingTop: 6,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 10,
   },
   tabBarLabel: {
     fontSize: 11,

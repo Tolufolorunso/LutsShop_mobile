@@ -7,18 +7,29 @@ export interface AuthUser {
   avatarUrl?: string;
   isDemo?: boolean;
   isPro?: boolean;
+  idToken?: string;
 }
 
 export interface BackendProfileResponse {
+  success?: boolean;
+  user?: {
+    id: string;
+    email: string;
+    fullName?: string;
+    avatarUrl?: string | null;
+    isPro?: boolean;
+    subscriptionStatus?: string;
+  };
   profile?: {
     id: string;
     email: string;
     full_name?: string;
-    avatar_url?: string;
+    avatar_url?: string | null;
     is_pro?: boolean;
     created_at?: string;
     updated_at?: string;
   };
+  token?: string;
   error?: string;
 }
 
