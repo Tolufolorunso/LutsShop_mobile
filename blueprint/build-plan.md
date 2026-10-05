@@ -32,7 +32,7 @@ Sequential development roadmap. Each item is a reviewable slice of functionality
 ## Milestone 5: Mobile Checkout, Orders & Library
 
 - [x] 16. **Checkout Screen & Simulated Payment** — `CheckoutScreen` / bottom sheet with email pre-fill, payment method selection, submit to `POST /api/orders`
-- [ ] 17. **Order Success Screen & Cart Clearance** — Confirmation screen, clear local + remote cart, link to My Library
+- [x] 17. **Order Success Screen & Cart Clearance** — Confirmation screen, clear local + remote cart, link to My Library
 - [ ] 18. **My Library Screen** — `LibraryScreen` with `GET /api/orders` pulling purchased packs, license status, and download buttons
 
 ## Milestone 6: Physical Device Testing & Submission

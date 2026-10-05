@@ -69,14 +69,29 @@ export default function CheckoutScreen() {
     setIsSubmitting(true);
     setError(null);
     try {
-      await placeOrder({
+      const response = await placeOrder({
         userId: user.id,
         customerEmail: email.trim(),
         items,
         paymentMethod,
       });
-      // Interim transition until feature 17 adds the success screen and cart clearance
-      router.replace('/(tabs)/cart');
+
+      // Parse the order id tolerantly — the backend response shape is unconfirmed
+      const orderId =
+        typeof response.orderId === 'string'
+          ? response.orderId
+          : response.order && typeof response.order.id === 'string'
+            ? response.order.id
+            : undefined;
+
+      router.replace({
+        pathname: '/order-success',
+        params: {
+          total: String(subtotal),
+          itemCount: String(itemCount),
+          ...(orderId ? { orderId } : {}),
+        },
+      });
     } catch (err) {
       setError(
         err instanceof ApiError
