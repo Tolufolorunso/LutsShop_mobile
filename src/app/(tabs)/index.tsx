@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -21,6 +21,7 @@ import {
 import { ProductCard } from '@/components/product';
 import { SplitComparisonView } from '@/components/slider';
 import { useProducts } from '@/hooks';
+import { useCart } from '@/context';
 import { Product } from '@/types/product';
 import { CinemaTheme } from '@/theme';
 
@@ -48,19 +49,14 @@ export default function ShopScreen() {
     refresh,
   } = useProducts();
 
-  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  const { addItem, isInCart, itemCount } = useCart();
 
-  const handleAddToCart = useCallback((product: Product) => {
-    setAddedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(product.id)) {
-        next.delete(product.id);
-      } else {
-        next.add(product.id);
-      }
-      return next;
-    });
-  }, []);
+  const handleAddToCart = useCallback(
+    (product: Product) => {
+      addItem(product);
+    },
+    [addItem]
+  );
 
   const handleProductPress = useCallback(
     (product: Product) => {
@@ -78,10 +74,10 @@ export default function ShopScreen() {
         product={item}
         onAddToCart={handleAddToCart}
         onPress={handleProductPress}
-        isAdded={addedIds.has(item.id)}
+        isAdded={isInCart(item.id)}
       />
     ),
-    [handleAddToCart, handleProductPress, addedIds]
+    [handleAddToCart, handleProductPress, isInCart]
   );
 
   const renderHeader = () => (
@@ -206,8 +202,8 @@ export default function ShopScreen() {
                 }
               />
               <AppButton
-                title={addedIds.has(featuredProduct.id) ? 'ADDED ✓' : '+ ADD TO CART'}
-                variant={addedIds.has(featuredProduct.id) ? 'secondary' : 'primary'}
+                title={isInCart(featuredProduct.id) ? 'ADDED ✓' : '+ ADD TO CART'}
+                variant={isInCart(featuredProduct.id) ? 'secondary' : 'primary'}
                 size="sm"
                 onPress={() => handleAddToCart(featuredProduct)}
               />
@@ -281,7 +277,7 @@ export default function ShopScreen() {
       <CinemaHeader
         title="LUTSHOP"
         subtitle="CINEMA CATALOG"
-        cartCount={addedIds.size}
+        cartCount={itemCount}
         onCartPress={() => router.push('/(tabs)/cart')}
       />
 

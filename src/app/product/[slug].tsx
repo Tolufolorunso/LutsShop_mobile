@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui';
 import { SplitComparisonView } from '@/components/slider';
 import { useProduct } from '@/hooks';
+import { useCart } from '@/context';
 import { CinemaTheme } from '@/theme';
 
 export default function ProductDetailScreen() {
@@ -25,11 +26,7 @@ export default function ProductDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const { product, loading, error } = useProduct(slug);
 
-  const [isAdded, setIsAdded] = useState<boolean>(false);
-
-  const handleAddToCart = () => {
-    setIsAdded((prev) => !prev);
-  };
+  const { addItem, isInCart } = useCart();
 
   if (loading) {
     return (
@@ -113,7 +110,7 @@ export default function ProductDetailScreen() {
             size={22}
             color={CinemaTheme.colors.textPrimary}
           />
-          {isAdded && <View style={styles.cartBadgeDot} />}
+          {isInCart(product.id) && <View style={styles.cartBadgeDot} />}
         </TouchableOpacity>
       </View>
 
@@ -282,10 +279,10 @@ export default function ProductDetailScreen() {
         </View>
 
         <AppButton
-          title={isAdded ? 'ADDED TO CART ✓' : '+ ADD TO CART'}
-          variant={isAdded ? 'secondary' : 'primary'}
+          title={isInCart(product.id) ? 'ADDED TO CART ✓' : '+ ADD TO CART'}
+          variant={isInCart(product.id) ? 'secondary' : 'primary'}
           size="md"
-          onPress={handleAddToCart}
+          onPress={() => addItem(product)}
           style={styles.buyBtn}
         />
       </View>

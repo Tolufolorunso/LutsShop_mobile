@@ -24,7 +24,7 @@ Sequential development roadmap. Each item is a reviewable slice of functionality
 
 ## Milestone 4: Bi-Directional Cart & Real-Time Sync
 
-- [ ] 12. **Cart Context & Local Persistence** — `CartContext` managing items, badge count, totals, and AsyncStorage caching
+- [x] 12. **Cart Context & Local Persistence** — `CartContext` managing items, badge count, totals, and AsyncStorage caching
 - [ ] 13. **Backend Cart Sync** — Wire `GET/POST/DELETE /api/cart` to `CartContext`; sync on login and add/remove actions
 - [ ] 14. **Focus & Real-Time Sync Engine** — `useFocusEffect` cart refresh + optional Supabase Realtime WebSocket on `cart_items`
 - [ ] 15. **Cart Screen & Item Management** — `CartScreen` with item list, thumbnails, delete, subtotal, and "Proceed to Checkout" CTA

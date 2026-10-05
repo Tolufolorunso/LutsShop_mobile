@@ -10,15 +10,17 @@ import {
   CinemaHeader,
 } from '@/components/ui';
 import { CinemaTheme } from '@/theme';
+import { useCart } from '@/context';
 
 export default function CartScreen() {
   const router = useRouter();
+  const { itemCount } = useCart();
 
   return (
     <View style={styles.container}>
       <CinemaHeader
         title="YOUR CART"
-        subtitle="0 ITEMS"
+        subtitle={itemCount === 1 ? '1 ITEM' : `${itemCount} ITEMS`}
       />
 
       <ScrollView

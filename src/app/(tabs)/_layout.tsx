@@ -3,8 +3,11 @@ import { Platform, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { CinemaTheme } from '@/theme';
+import { useCart } from '@/context';
 
 export default function TabLayout() {
+  const { itemCount } = useCart();
+
   return (
     <Tabs
       screenOptions={{
@@ -32,6 +35,11 @@ export default function TabLayout() {
         name="cart"
         options={{
           title: 'Cart',
+          tabBarBadge: itemCount,
+          tabBarBadgeStyle: {
+            backgroundColor: CinemaTheme.colors.primary,
+            color: CinemaTheme.colors.background,
+          },
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'cart' : 'cart-outline'}
