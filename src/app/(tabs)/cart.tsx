@@ -10,11 +10,12 @@ import {
   CinemaHeader,
 } from '@/components/ui';
 import { CartItemCard } from '@/components/cart';
-import { useCart } from '@/context';
+import { useAuth, useCart } from '@/context';
 import { CinemaTheme } from '@/theme';
 
 export default function CartScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const { items, itemCount, subtotal, removeItem, refresh } = useCart();
 
   // Re-sync with the backend whenever the Cart tab gains focus
@@ -133,8 +134,8 @@ export default function CartScreen() {
                 title="PROCEED TO CHECKOUT"
                 variant="primary"
                 size="md"
-                disabled
-                onPress={() => {}}
+                disabled={!user}
+                onPress={() => router.push('/checkout')}
                 style={styles.checkoutBtn}
               />
             </CinemaCard>

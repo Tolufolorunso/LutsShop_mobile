@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import { MOCK_PRODUCTS } from '../data/mockProducts';
 import { Product, ProductFilterParams } from '../types/product';
 import { RawCartEnvelope, RawCartRow } from '../types/cart';
+import { CreateOrderPayload, OrderSubmissionResponse } from '../types/order';
 
 // Determine default base URL based on runtime environment
 const getDefaultBaseUrl = (): string => {
@@ -299,4 +300,10 @@ export const removeRemoteCartItem = async (
 
 export const clearRemoteCart = async (userId: string): Promise<void> => {
   await apiClient.delete('/api/cart', { userId, clearAll: true }, { timeoutMs: 5000 });
+};
+
+export const placeOrder = async (
+  payload: CreateOrderPayload
+): Promise<OrderSubmissionResponse> => {
+  return apiClient.post<OrderSubmissionResponse>('/api/orders', payload);
 };
