@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import { MOCK_PRODUCTS } from '../data/mockProducts';
 import { Product, ProductFilterParams } from '../types/product';
+import { RawCartEnvelope, RawCartRow } from '../types/cart';
 
 // Determine default base URL based on runtime environment
 const getDefaultBaseUrl = (): string => {
@@ -242,4 +243,60 @@ export const fetchProductBySlug = async (
     );
     return found || null;
   }
+};
+
+// ---------------------------------------------------------------------------
+// Backend cart sync (GET/POST/DELETE /api/cart)
+// ---------------------------------------------------------------------------
+
+// The GET /api/cart response shape is not documented; tolerate the common
+// shapes: bare id strings, { product_id | productId | id } rows, an
+// { items | cart_items } wrapper around either, or enriched products with id.
+const extractCartProductIds = (data: unknown): string[] => {
+  const toId = (entry: unknown): string | null => {
+    if (typeof entry === 'string') return entry;
+    if (entry && typeof entry === 'object') {
+      const row = entry as RawCartRow;
+      if (typeof row.product_id === 'string') return row.product_id;
+      if (typeof row.productId === 'string') return row.productId;
+      if (typeof row.id === 'string') return row.id;
+    }
+    return null;
+  };
+
+  let list: unknown = data;
+  if (data && typeof data === 'object' && !Array.isArray(data)) {
+    const envelope = data as RawCartEnvelope;
+    list = envelope.items ?? envelope.cart_items ?? [];
+  }
+  if (!Array.isArray(list)) return [];
+
+  return list.map(toId).filter((id): id is string => id !== null);
+};
+
+export const fetchCartProductIds = async (userId: string): Promise<string[]> => {
+  const data = await apiClient.get<unknown>(
+    '/api/cart',
+    { userId },
+    { timeoutMs: 5000 }
+  );
+  return extractCartProductIds(data);
+};
+
+export const addRemoteCartItem = async (
+  userId: string,
+  productId: string
+): Promise<void> => {
+  await apiClient.post('/api/cart', { userId, productId }, { timeoutMs: 5000 });
+};
+
+export const removeRemoteCartItem = async (
+  userId: string,
+  productId: string
+): Promise<void> => {
+  await apiClient.delete('/api/cart', { userId, productId }, { timeoutMs: 5000 });
+};
+
+export const clearRemoteCart = async (userId: string): Promise<void> => {
+  await apiClient.delete('/api/cart', { userId, clearAll: true }, { timeoutMs: 5000 });
 };
